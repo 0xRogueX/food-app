@@ -1,11 +1,12 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.config.SystemConfig;
 import com.fooddeliveryapp.model.Order;
 import com.fooddeliveryapp.model.OrderItem;
 import com.fooddeliveryapp.model.Payment;
 import com.fooddeliveryapp.repository.PaymentRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryPaymentRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcPaymentRepository;
 import com.fooddeliveryapp.service.impl.PaymentServiceImpl;
 import com.fooddeliveryapp.strategy.CashPayment;
 import com.fooddeliveryapp.strategy.UPIPayment;
@@ -19,7 +20,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class PaymentServiceTest {
+class PaymentServiceTest extends JdbcTestBase {
 
     private PaymentService paymentService;
     private Order sampleOrder;
@@ -31,7 +32,7 @@ class PaymentServiceTest {
         config.setTaxRate(5.0);
         config.setDeliveryFee(40.0);
 
-        PaymentRepository paymentRepository = new InMemoryPaymentRepository();
+        PaymentRepository paymentRepository = new JdbcPaymentRepository(connectionManager);
         paymentService = new PaymentServiceImpl(paymentRepository);
 
         // subTotal=200, discount=0, deliveryFee=40 → tax=10, finalAmount=250

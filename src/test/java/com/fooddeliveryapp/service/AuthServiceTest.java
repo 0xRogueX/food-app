@@ -1,12 +1,13 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.exception.FoodDeliveryException;
 import com.fooddeliveryapp.model.Admin;
 import com.fooddeliveryapp.model.Customer;
 import com.fooddeliveryapp.model.DeliveryAgent;
 import com.fooddeliveryapp.model.User;
 import com.fooddeliveryapp.repository.UserRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryUserRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcUserRepository;
 import com.fooddeliveryapp.service.impl.AuthServiceImpl;
 import com.fooddeliveryapp.type.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,13 +15,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AuthServiceTest {
+class AuthServiceTest extends JdbcTestBase {
 
     private AuthService authService;
 
     @BeforeEach
     void setUp() {
-        UserRepository userRepository = new InMemoryUserRepository();
+        UserRepository userRepository = new JdbcUserRepository(connectionManager);
         authService = new AuthServiceImpl(userRepository);
     }
 
