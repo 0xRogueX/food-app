@@ -1,0 +1,190 @@
+# ============================================================
+# Food Delivery App — Ultimate Demo Script
+# ============================================================
+
+# ── STEP 1: Register 3 Customers ─────────────────────────────
+2
+cus1
+9000000001
+cus1@test.com
+1234
+Address 1
+
+2
+cus2
+9000000002
+cus2@test.com
+1234
+Address 2
+
+2
+cus3
+9000000003
+cus3@test.com
+1234
+Address 3
+
+# ── STEP 2: Register 2 Delivery Agents ───────────────────────
+# Note: Admin was created at boot (ID=1). Agents will receive IDs 5 and 6.
+3
+agent1
+9000000004
+agent1@test.com
+1234
+
+3
+agent2
+9000000005
+agent2@test.com
+1234
+
+# ── STEP 3: Login as System Admin ────────────────────────────
+1
+admin@food.com
+admin123
+
+# ── STEP 4: Admin creates Categories & Menu Items ────────────
+1
+1
+Burgers
+
+1
+1
+Pizzas
+
+2
+1
+1
+Classic Burger
+150
+
+2
+1
+2
+Cheese Pizza
+300
+
+# ── STEP 5: Admin sets 10% Discount for orders over ₹400 ─────
+7
+3
+400
+10
+
+# ── STEP 6: Admin Logout ─────────────────────────────────────
+9
+
+# ── STEP 7: Customer 1 Places Order 1 ────────────────────────
+1
+cus1@test.com
+1234
+
+1
+y
+1
+2
+
+# Checkout with Cash (Assigned to Agent 1)
+3
+1
+
+7
+
+# ── STEP 8: Customer 2 Places Order 2 ────────────────────────
+1
+cus2@test.com
+1234
+
+1
+y
+2
+1
+
+# Checkout with UPI (Assigned to Agent 2)
+3
+2
+cus2@upi
+
+7
+
+# ── STEP 9: Customer 3 Places Order 3 (THE QUEUE TEST) ───────
+1
+cus3@test.com
+1234
+
+1
+y
+2
+2
+
+# Checkout with Cash (NO AGENTS FREE! Goes to Queue)
+3
+1
+
+# Track Order (Will show "In Queue...")
+4
+
+7
+
+# ── STEP 10: Agent 1 Delivers Order 1 ────────────────────────
+1
+agent1@test.com
+1234
+
+# Mark Order 1 Out for Delivery
+3
+1
+1
+
+# Mark Order 1 Delivered (THIS AUTO-ASSIGNS ORD-3 TO AGENT 1!)
+3
+1
+2
+
+# View Assigned Orders (Agent 1 should now see ORD-3!)
+2
+
+4
+
+# ── STEP 11: Customer 1 Rates Agent & Views Invoice ──────────
+1
+cus1@test.com
+1234
+
+# Rate Agent 1 (ID=5)
+6
+5
+5.0
+
+# View Invoice for Order 1 (ID=1)
+5
+y
+1
+
+7
+
+# delivery agent show his profile
+1
+agent1@test.com
+1234
+
+1
+
+4
+
+# ── STEP 12: Admin Final Verification ────────────────────────
+1
+admin@food.com
+admin123
+
+# View All Orders (Shows 1 Delivered, 2 Assigned)
+5
+
+# View Agents (Shows Agent 1 has 1 delivery and 5.0 rating)
+4
+
+# View Finance (Shows Total Revenue)
+6
+
+9
+
+# ── Script ends — app switches to manual input ────────────────

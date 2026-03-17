@@ -1,0 +1,155 @@
+// ====================================================================
+// FOOD DELIVERY SYSTEM DATABASE - DBML Script for dbdiagram.io
+// ====================================================================
+
+// --------------------------------------------------------------------
+// ENUMS
+// --------------------------------------------------------------------
+Enum order_status {
+  CREATED
+  PAID
+  ASSIGNED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+Enum payment_status {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+Enum payment_mode {
+  CASH
+  UPI
+  CARD
+  NET_BANKING
+}
+
+// --------------------------------------------------------------------
+// TABLES
+// --------------------------------------------------------------------
+Table users {
+  id BIGINT [pk, increment]
+  name VARCHAR(100) [not null]
+  phone VARCHAR(20) [unique, not null]
+  email VARCHAR(100) [unique, not null]
+  password VARCHAR(255) [not null]
+  created_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+}
+
+Table customers {
+  user_id BIGINT [pk]
+  address TEXT
+}
+
+Table delivery_agents {
+  user_id BIGINT [pk]
+  available BOOLEAN [default: true]
+  average_rating DECIMAL(3,2) [default: 0.0]
+  total_ratings INT [default: 0]
+  total_deliveries INT [default: 0]
+  last_assigned_time TIMESTAMP
+}
+
+Table admins {
+  user_id BIGINT [pk]
+}
+
+Table categories {
+  id BIGINT [pk, increment]
+  name VARCHAR(100) [unique, not null]
+  is_active BOOLEAN [default: true]
+}
+
+Table menu_items {
+  id BIGINT [pk, increment]
+  category_id BIGINT
+  name VARCHAR(100) [unique, not null]
+  price DECIMAL(10,2) [not null, note: 'CHECK(price > 0)']
+  is_available BOOLEAN [default: true]
+}
+
+Table payments {
+  id BIGINT [pk, increment]
+  amount DECIMAL(10,2) [not null, note: 'CHECK(amount > 0)']
+  mode payment_mode [not null]
+  status payment_status [not null, default: 'PENDING']
+  transaction_ref VARCHAR(100) [unique]
+  created_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  paid_at TIMESTAMP
+}
+
+Table orders {
+  id BIGINT [pk, increment]
+  customer_id BIGINT
+  payment_id BIGINT
+  delivery_agent_id BIGINT
+  delivery_address TEXT [not null]
+  subtotal DECIMAL(10,2) [not null]
+  discount_amount DECIMAL(10,2) [default: 0.0]
+  tax_amount DECIMAL(10,2) [default: 0.0]
+  delivery_fee DECIMAL(10,2) [default: 0.0]
+  final_amount DECIMAL(10,2) [not null]
+  status order_status [default: 'CREATED']
+  created_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  updated_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  delivered_at TIMESTAMP
+}
+
+Table order_items {
+  id BIGINT [pk, increment]
+  order_id BIGINT
+  menu_item_id BIGINT
+  menu_item_name VARCHAR(100) [not null]
+  price_at_add_time DECIMAL(10,2) [not null]
+  quantity INT [not null, note: 'CHECK(quantity > 0)']
+
+  indexes {
+    (order_id, menu_item_id) [unique]
+  }
+}
+
+Table carts {
+  customer_id BIGINT [pk]
+  created_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+  updated_at TIMESTAMP [default: `CURRENT_TIMESTAMP`]
+}
+
+Table cart_items {
+  id BIGINT [pk, increment]
+  cart_id BIGINT
+  menu_item_id BIGINT
+  quantity INT [not null, note: 'CHECK(quantity > 0)']
+
+  indexes {
+    (cart_id, menu_item_id) [unique]
+  }
+}
+
+// --------------------------------------------------------------------
+// RELATIONSHIPS (FOREIGN KEYS)
+// --------------------------------------------------------------------
+
+// User Profiles (1-to-1 relationships)
+Ref: customers.user_id - users.id [delete: cascade]
+Ref: delivery_agents.user_id - users.id [delete: cascade]
+Ref: admins.user_id - users.id [delete: cascade]
+
+// Menu & Categories (Many-to-1)
+Ref: menu_items.category_id > categories.id [delete: set null]
+
+// Orders (Many-to-1 and 1-to-1)
+Ref: orders.customer_id > customers.user_id [delete: set null]
+Ref: orders.payment_id - payments.id [delete: set null]
+Ref: orders.delivery_agent_id > delivery_agents.user_id [delete: set null]
+
+// Order Items (Many-to-1)
+Ref: order_items.order_id > orders.id [delete: cascade]
+Ref: order_items.menu_item_id > menu_items.id [delete: set null]
+
+// Carts (1-to-1 and Many-to-1)
+Ref: carts.customer_id - customers.user_id [delete: cascade]
+Ref: cart_items.cart_id > carts.customer_id [delete: cascade]
+Ref: cart_items.menu_item_id > menu_items.id [delete: set null]

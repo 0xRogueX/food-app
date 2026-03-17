@@ -1,0 +1,588 @@
+classDiagram
+
+%% ==========================================
+%% MODELS
+%% ==========================================
+    class User {
+        <<abstract>>
+        #String id
+        #String name
+        #String phone
+        #String email
+        #String password
+        #LocalDateTime createdAt
+        +getRole()* Role
+        +getId() String
+        +getName() String
+        +getPhone() String
+        +getEmail() String
+        +getPassword() String
+    }
+
+    class Admin {
+        +getRole() Role
+    }
+
+    class Customer {
+        -String address
+        -Cart activeCart
+        +getRole() Role
+        +getAddress() String
+        +getActiveCart() Cart
+    }
+
+    class DeliveryAgent {
+        -boolean available
+        -double averageRating
+        -int totalRatings
+        -int totalDeliveries
+        +getRole() Role
+        +isAvailable() boolean
+        +getRating() double
+        +getTotalRatings() int
+        +getTotalDeliveries() int
+        +addRating(double rating) void
+        +incrementDeliveries() void
+        +markBusy() void
+        +markAvailable() void
+        +setAvailability(boolean available) void
+    }
+
+    User <|-- Admin
+    User <|-- Customer
+    User <|-- DeliveryAgent
+
+    class Category {
+        -String id
+        -String name
+        -boolean active
+        +getId() String
+        +getName() String
+        +isActive() boolean
+        +rename(String newName) void
+        +activate() void
+        +deactivate() void
+        -validateName(String name) String
+    }
+
+    class MenuItem {
+        -String id
+        -String name
+        -double price
+        -String categoryId
+        -boolean available
+        +getId() String
+        +getName() String
+        +getPrice() double
+        +getCategoryId() String
+        +isAvailable() boolean
+        +updatePrice(double newPrice) void
+        +rename(String newName) void
+        +changeAvailability(boolean status) void
+        +changeCategory(String newCategoryId) void
+    }
+
+    class Cart {
+        -String customerId
+        -List~CartItem~ items
+        +clear() void
+        +isEmpty() boolean
+        +getCustomerId() String
+        +getItems() List~CartItem~
+        +getTotalItems() int
+        +getSubTotal() double
+    }
+
+    class CartItem {
+        -String menuItemId
+        -String menuItemName
+        -double priceAtAddTime
+        -int quantity
+        +getLineTotal() double
+        +getMenuItemId() String
+        +getMenuItemName() String
+        +getPriceAtAddTime() double
+        +getQuantity() int
+        +setQuantity(int quantity) void
+    }
+
+    Cart "1" *-- "*" CartItem : contains
+    Customer "1" *-- "1" Cart : has
+
+    class Order {
+        -String orderNumber
+        -String customerId
+        -String deliveryAgentId
+        -List~OrderItem~ items
+        -double subTotal
+        -double discountAmount
+        -double deliveryFee
+        -double taxAmount
+        -double finalAmount
+        -OrderStatus status
+        -String paymentId
+        -LocalDateTime createdAt
+        +getOrderNumber() String
+        +getCustomerId() String
+        +getDeliveryAgentId() String
+        +getStatus() OrderStatus
+        +getFinalAmount() double
+        +getSubTotal() double
+        +getDiscountAmount() double
+        +getTaxAmount() double
+        +getDeliveryFee() double
+        +getItems() List~OrderItem~
+        +getCreatedAt() LocalDateTime
+        +getPaymentId() String
+        +assignDeliveryAgent(String agentId) void
+        +markOutForDelivery() void
+        +markDelivered() void
+        +cancel() void
+        +attachPayment(String paymentId) void
+    }
+
+    class OrderItem {
+        -String menuItemId
+        -String menuItemName
+        -double priceAtPurchase
+        -int quantity
+        +getFoodItemId() String
+        +getFoodItemName() String
+        +getPriceAtPurchase() double
+        +getQuantity() int
+        +getLineTotal() double
+    }
+
+    Order "1" *-- "*" OrderItem : contains
+
+    class Payment {
+        -String id
+        -String orderId
+        -double amount
+        -PaymentMode mode
+        -PaymentStatus status
+        -LocalDateTime createdAt
+        -LocalDateTime paidAt
+        +getPaymentId() String
+        +getOrderId() String
+        +getAmount() double
+        +getMode() PaymentMode
+        +getStatus() PaymentStatus
+        +getCreatedAt() LocalDateTime
+        +getPaidAt() LocalDateTime
+        +markSuccess() void
+        +markFailed() void
+    }
+
+%% ==========================================
+%% REPOSITORIES (Interfaces & Implementations)
+%% ==========================================
+    class CategoryRepository {
+        <<interface>>
+        +save(Category category) Category
+        +findById(String id) Optional~Category~
+        +findByName(String name) Optional~Category~
+        +findAll() List~Category~
+        +findAllActive() List~Category~
+        +findAllInactive() List~Category~
+        +deleteById(String id) void
+        +existsByName(String name) boolean
+        +existsById(String categoryId) boolean
+    }
+    class InMemoryCategoryRepository {
+        -Map~String, Category~ store
+        -Map~String, String~ nameIndex
+    }
+    CategoryRepository <|.. InMemoryCategoryRepository
+
+    class DeliveryAgentRepository {
+        <<interface>>
+        +findById(String id) Optional~DeliveryAgent~
+        +findByEmail(String email) Optional~DeliveryAgent~
+        +findAll() List~DeliveryAgent~
+        +findAvailableAgents() List~DeliveryAgent~
+    }
+    class InMemoryDeliveryAgentRepository {
+        -UserRepository userRepository
+    }
+    DeliveryAgentRepository <|.. InMemoryDeliveryAgentRepository
+
+    class MenuItemRepository {
+        <<interface>>
+        +save(MenuItem item) MenuItem
+        +findById(String id) Optional~MenuItem~
+        +findByName(String name) Optional~MenuItem~
+        +findAll() List~MenuItem~
+        +findAllActive() List~MenuItem~
+        +findAllInactive() List~MenuItem~
+        +findByCategoryId(String categoryId) List~MenuItem~
+        +deleteById(String id) void
+        +existsById(String id) boolean
+        +existsByName(String name) boolean
+    }
+    class InMemoryMenuItemRepository {
+        -Map~String, MenuItem~ store
+        -Map~String, String~ nameIndex
+        -CategoryRepository categoryRepository
+    }
+    MenuItemRepository <|.. InMemoryMenuItemRepository
+
+    class OrderRepository {
+        <<interface>>
+        +save(Order order) Order
+        +findByOrderNumber(String orderNumber) Optional~Order~
+        +findAll() List~Order~
+        +findAllByStatus(OrderStatus status) List~Order~
+        +findByCustomerId(String customerId) List~Order~
+        +findOngoingOrders() List~Order~
+        +findByDeliveryAgentId(String agentId) List~Order~
+        +findByPaymentId(String paymentId) Optional~Order~
+        +existsByOrderNumber(String orderNumber) boolean
+        +update(Order order) void
+    }
+    class InMemoryOrderRepository {
+        -Map~String, Order~ store
+        -Map~String, String~ paymentIndex
+    }
+    OrderRepository <|.. InMemoryOrderRepository
+
+    class PaymentRepository {
+        <<interface>>
+        +save(Payment payment) Payment
+        +findById(String paymentId) Optional~Payment~
+        +findAll() List~Payment~
+        +findByOrderId(String orderId) List~Payment~
+        +update(Payment payment) void
+        +existsById(String paymentId) boolean
+    }
+    class InMemoryPaymentRepository {
+        -Map~String, Payment~ paymentStore
+        -Map~String, List~String~~ orderIndex
+    }
+    PaymentRepository <|.. InMemoryPaymentRepository
+
+    class UserRepository {
+        <<interface>>
+        +save(User user) User
+        +findById(String id) Optional~User~
+        +findByEmail(String email) Optional~User~
+        +findAll() List~User~
+        +deleteById(String id) void
+        +existsById(String id) boolean
+    }
+    class InMemoryUserRepository {
+        -Map~String, User~ usersById
+        -Map~String, User~ usersByEmail
+    }
+    UserRepository <|.. InMemoryUserRepository
+
+%% ==========================================
+%% SERVICES (Interfaces & Implementations)
+%% ==========================================
+    class AuthService {
+        <<interface>>
+        +login(String email, String password) User
+        +registerCustomer(String name, String phone, String email, String password, String address) Customer
+        +registerDeliveryAgent(String name, String phone, String email, String password) DeliveryAgent
+        +registerAdmin(String name, String phone, String email, String password) Admin
+        +adminExists(String defaultAdminEmail) boolean
+    }
+    class AuthServiceImpl {
+        -UserRepository userRepository
+        -checkEmailExists(String email) void
+    }
+    AuthService <|.. AuthServiceImpl
+
+    class CartService {
+        <<interface>>
+        +getCart(String customerId) Cart
+        +addItem(String customerId, String menuItemId, int quantity) void
+        +removeItem(String customerId, String menuItemId) void
+        +updateItemQuantity(String customerId, String menuItemId, int quantity) void
+        +clearCart(String customerId) void
+        +getTotalPrice(String customerId) double
+        +getTotalItems(String customerId) int
+    }
+    class CartServiceImpl {
+        -UserRepository userRepository
+        -MenuItemRepository menuItemRepository
+        -getCustomerCart(String customerId) Cart
+    }
+    CartService <|.. CartServiceImpl
+
+    class DeliveryService {
+        <<interface>>
+        +assignAgentToOrder(String orderId) Optional~DeliveryAgent~
+        +markOrderOutForDelivery(String orderId) void
+        +markOrderDelivered(String orderId) void
+        +rateDeliveryAgent(String agentId, double rating) void
+    }
+    class DeliveryServiceImpl {
+        -DeliveryAgentRepository deliveryAgentRepository
+        -UserRepository userRepository
+        -OrderService orderService
+    }
+    DeliveryService <|.. DeliveryServiceImpl
+
+    class MenuService {
+        <<interface>>
+        +addCategory(String name) Category
+        +renameCategory(String categoryId, String newName) void
+        +toggleCategoryStatus(String categoryId, boolean activate) void
+        +getAllCategories() List~Category~
+        +getActiveCategories() List~Category~
+        +addMenuItem(String name, double price, String categoryId) MenuItem
+        +updateMenuItem(String itemId, String name, double price, String categoryId) void
+        +toggleMenuItemAvailability(String itemId, boolean available) void
+        +removeMenuItem(String itemId) void
+        +getMenuItemById(String itemId) Optional~MenuItem~
+        +getAllMenuItems() List~MenuItem~
+        +getAvailableMenuItemsByCategory(String categoryId) List~MenuItem~
+        +searchMenuItemsByName(String keyword) List~MenuItem~
+    }
+    class MenuServiceImpl {
+        -CategoryRepository categoryRepository
+        -MenuItemRepository menuItemRepository
+    }
+    MenuService <|.. MenuServiceImpl
+
+    class OrderService {
+        <<interface>>
+        +placeOrder(String customerId, PaymentStrategy paymentStrategy) Order
+        +assignDeliveryAgent(String orderNumber, String agentId) void
+        +markOrderOutForDelivery(String orderNumber) void
+        +markOrderDelivered(String orderNumber) void
+        +cancelOrder(String orderNumber) void
+        +getOrderById(String orderNumber) Optional~Order~
+        +getOrdersByCustomer(String customerId) List~Order~
+        +getOrdersByDeliveryAgent(String agentId) List~Order~
+        +getOrdersByStatus(OrderStatus status) List~Order~
+        +getOngoingOrders() List~Order~
+        +getAllOrders() List~Order~
+    }
+    class OrderServiceImpl {
+        -OrderRepository orderRepository
+        -CartService cartService
+        -PaymentService paymentService
+        -getOrderOrThrow(String orderNumber) Order
+    }
+    OrderService <|.. OrderServiceImpl
+
+    class PaymentService {
+        <<interface>>
+        +processPayment(Order order, PaymentStrategy strategy) Payment
+        +getPaymentById(String paymentId) Optional~Payment~
+        +getPaymentsByOrderId(String orderId) List~Payment~
+        +getAllPayments() List~Payment~
+        +calculateTotalRevenue() double
+    }
+    class PaymentServiceImpl {
+        -PaymentRepository paymentRepository
+    }
+    PaymentService <|.. PaymentServiceImpl
+
+    class UserService {
+        <<interface>>
+        +getUserById(String id) Optional~User~
+        +getUserByEmail(String email) Optional~User~
+        +getAllUsers() List~User~
+        +existsById(String id) boolean
+        +deleteUserById(String id) void
+        +getUsersByRole(Role role) List~User~
+        +getAllDeliveryAgents() List~DeliveryAgent~
+        +getAvailableDeliveryAgents() List~DeliveryAgent~
+        +getNextAvailableDeliveryAgent() Optional~DeliveryAgent~
+    }
+    class UserServiceImpl {
+        -UserRepository userRepository
+        -DeliveryAgentRepository deliveryAgentRepository
+    }
+    UserService <|.. UserServiceImpl
+
+%% ==========================================
+%% CONTROLLERS & CONFIG
+%% ==========================================
+    class SystemConfig {
+        -SystemConfig instance$
+        -DiscountStrategy discountStrategy
+        -double taxRate
+        -double deliveryFee
+        +getInstance() SystemConfig$
+        +initializeSystemDefaults(AuthService authService) void
+        +getDiscountStrategy() DiscountStrategy
+        +setDiscountStrategy(DiscountStrategy discountStrategy) void
+        +getTaxRate() double
+        +setTaxRate(double taxRate) void
+        +getDeliveryFee() double
+        +setDeliveryFee(double deliveryFee) void
+    }
+
+    class AdminController {
+        -MenuService menuService
+        -UserService userService
+        -OrderService orderService
+        -PaymentService paymentService
+        +start(User admin) void
+        -manageCategories() void
+        -manageMenuItems() void
+        -viewUsers(Role role) void
+        -viewDeliveryAgents() void
+        -viewOrders() void
+        -viewFinance() void
+        -configureDiscounts() void
+        -configureFees() void
+    }
+
+    class AuthController {
+        -AuthService authService
+        +login() User
+        +registerCustomer() void
+        +registerDeliveryAgent() void
+    }
+
+    class CustomerController {
+        -MenuService menuService
+        -CartService cartService
+        -OrderService orderService
+        -PaymentService paymentService
+        -DeliveryService deliveryService
+        +start(User user) void
+        -browseMenu(Customer customer) void
+        -manageCart(Customer customer) void
+        -checkout(Customer customer) void
+        -trackOrders(Customer customer) void
+        -viewHistoryAndInvoice(Customer customer) void
+        -rateAgent() void
+    }
+
+    class DeliveryAgentController {
+        -OrderService orderService
+        -DeliveryService deliveryService
+        +start(User user) void
+        -viewProfile(DeliveryAgent agent) void
+        -viewAssignedOrders(DeliveryAgent agent) void
+        -updateOrderStatus(DeliveryAgent agent) void
+    }
+
+    class Application {
+        +main(String[] args)$ void
+    }
+
+%% ==========================================
+%% STRATEGIES
+%% ==========================================
+    class DiscountStrategy {
+        <<interface>>
+        +calculateDiscount(Order order) double
+    }
+    class FlatDiscount {
+        -double threshold
+        -double discountAmount
+        +calculateDiscount(Order order) double
+    }
+    class NoDiscount {
+        +calculateDiscount(Order order) double
+    }
+    class PercentageDiscount {
+        -double threshold
+        -double percentage
+        +calculateDiscount(Order order) double
+    }
+    DiscountStrategy <|.. FlatDiscount
+    DiscountStrategy <|.. NoDiscount
+    DiscountStrategy <|.. PercentageDiscount
+
+    class PaymentStrategy {
+        <<interface>>
+        +pay(double amount) boolean
+        +getPaymentType() PaymentMode
+    }
+    class CashPayment {
+        +pay(double amount) boolean
+        +getPaymentType() PaymentMode
+    }
+    class UPIPayment {
+        -String upiId
+        +pay(double amount) boolean
+        +getPaymentType() PaymentMode
+    }
+    PaymentStrategy <|.. CashPayment
+    PaymentStrategy <|.. UPIPayment
+
+%% ==========================================
+%% ENUMS
+%% ==========================================
+    class Role {
+        <<enumeration>>
+        ADMIN
+        CUSTOMER
+        DELIVERY_AGENT
+    }
+
+    class OrderStatus {
+        <<enumeration>>
+        CREATED
+        PAID
+        ASSIGNED
+        OUT_FOR_DELIVERY
+        DELIVERED
+        CANCELLED
+    }
+
+    class PaymentMode {
+        <<enumeration>>
+        CASH
+        UPI
+    }
+
+    class PaymentStatus {
+        <<enumeration>>
+        PENDING
+        SUCCESS
+        FAILED
+    }
+
+    class ErrorType {
+        <<enumeration>>
+        AUTHENTICATION_ERROR
+        CART_ERROR
+        ORDER_ERROR
+        RESOURCE_NOT_FOUND
+        USER_ALREADY_EXISTS
+    }
+
+    class IdType {
+        <<enumeration>>
+        USER
+        CATEGORY
+        MENU_ITEM
+        ORDER
+        PAYMENT
+    }
+
+%% ==========================================
+%% DEPENDENCY RELATIONSHIPS
+%% ==========================================
+    AdminController --> MenuService
+    AdminController --> UserService
+    AdminController --> OrderService
+    AdminController --> PaymentService
+
+    AuthController --> AuthService
+
+    CustomerController --> MenuService
+    CustomerController --> CartService
+    CustomerController --> OrderService
+    CustomerController --> PaymentService
+    CustomerController --> DeliveryService
+
+    DeliveryAgentController --> OrderService
+    DeliveryAgentController --> DeliveryService
+
+    Application --> AdminController
+    Application --> AuthController
+    Application --> CustomerController
+    Application --> DeliveryAgentController
+    Application --> SystemConfig
+
+    SystemConfig --> DiscountStrategy
