@@ -1,5 +1,6 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.config.SystemConfig;
 import com.fooddeliveryapp.exception.FoodDeliveryException;
 import com.fooddeliveryapp.model.Category;
@@ -13,13 +14,13 @@ import com.fooddeliveryapp.repository.MenuItemRepository;
 import com.fooddeliveryapp.repository.OrderRepository;
 import com.fooddeliveryapp.repository.PaymentRepository;
 import com.fooddeliveryapp.repository.UserRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryCartRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryCategoryRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryDeliveryAgentRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryMenuItemRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryOrderRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryPaymentRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryUserRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcCartRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcCategoryRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcDeliveryAgentRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcMenuItemRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcOrderRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcPaymentRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcUserRepository;
 import com.fooddeliveryapp.service.impl.CartServiceImpl;
 import com.fooddeliveryapp.service.impl.DeliveryServiceImpl;
 import com.fooddeliveryapp.service.impl.OrderServiceImpl;
@@ -34,7 +35,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class DeliveryServiceTest {
+class DeliveryServiceTest extends JdbcTestBase {
 
     private DeliveryService deliveryService;
     private OrderService orderService;
@@ -51,13 +52,13 @@ class DeliveryServiceTest {
         config.setTaxRate(5.0);
         config.setDeliveryFee(40.0);
 
-        userRepository = new InMemoryUserRepository();
-        InMemoryCategoryRepository categoryRepo = new InMemoryCategoryRepository();
-        MenuItemRepository menuItemRepo = new InMemoryMenuItemRepository(categoryRepo);
-        CartRepository cartRepo = new InMemoryCartRepository(userRepository);
-        OrderRepository orderRepo = new InMemoryOrderRepository();
-        PaymentRepository paymentRepo = new InMemoryPaymentRepository();
-        agentRepository = new InMemoryDeliveryAgentRepository(userRepository);
+        userRepository = new JdbcUserRepository(connectionManager);
+        JdbcCategoryRepository categoryRepo = new JdbcCategoryRepository(connectionManager);
+        MenuItemRepository menuItemRepo = new JdbcMenuItemRepository(connectionManager, categoryRepo);
+        CartRepository cartRepo = new JdbcCartRepository(connectionManager);
+        OrderRepository orderRepo = new JdbcOrderRepository(connectionManager);
+        PaymentRepository paymentRepo = new JdbcPaymentRepository(connectionManager);
+        agentRepository = new JdbcDeliveryAgentRepository(userRepository);
 
         PaymentService paymentService = new PaymentServiceImpl(paymentRepo);
         cartService = new CartServiceImpl(cartRepo, menuItemRepo);

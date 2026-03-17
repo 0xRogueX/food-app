@@ -1,5 +1,6 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.exception.FoodDeliveryException;
 import com.fooddeliveryapp.model.Cart;
 import com.fooddeliveryapp.model.Category;
@@ -8,10 +9,10 @@ import com.fooddeliveryapp.model.MenuItem;
 import com.fooddeliveryapp.repository.CartRepository;
 import com.fooddeliveryapp.repository.MenuItemRepository;
 import com.fooddeliveryapp.repository.UserRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryCartRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryCategoryRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryMenuItemRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryUserRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcCartRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcCategoryRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcMenuItemRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcUserRepository;
 import com.fooddeliveryapp.service.impl.CartServiceImpl;
 import com.fooddeliveryapp.type.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,7 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class CartServiceTest {
+class CartServiceTest extends JdbcTestBase {
 
     private CartService cartService;
     private UserRepository userRepository;
@@ -29,10 +30,10 @@ class CartServiceTest {
 
     @BeforeEach
     void setUp() {
-        userRepository = new InMemoryUserRepository();
-        InMemoryCategoryRepository categoryRepo = new InMemoryCategoryRepository();
-        menuItemRepository = new InMemoryMenuItemRepository(categoryRepo);
-        CartRepository cartRepository = new InMemoryCartRepository(userRepository);
+        userRepository = new JdbcUserRepository(connectionManager);
+        JdbcCategoryRepository categoryRepo = new JdbcCategoryRepository(connectionManager);
+        menuItemRepository = new JdbcMenuItemRepository(connectionManager, categoryRepo);
+        CartRepository cartRepository = new JdbcCartRepository(connectionManager);
         cartService = new CartServiceImpl(cartRepository, menuItemRepository);
 
         // Seed a category and menu item
@@ -96,7 +97,8 @@ class CartServiceTest {
 
     @Test
     void addItem_unavailableItem_throwsCartError() {
-        availableItem.changeAvailability(false); // mark unavailable in the same object reference
+        availableItem.changeAvailability(false); // mark unavailable and persist to DB
+        menuItemRepository.save(availableItem);
 
         FoodDeliveryException ex = assertThrows(FoodDeliveryException.class, () ->
                 cartService.addItem(customer.getId(), availableItem.getId(), 1));

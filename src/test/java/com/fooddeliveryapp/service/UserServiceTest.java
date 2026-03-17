@@ -1,12 +1,13 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.model.Customer;
 import com.fooddeliveryapp.model.DeliveryAgent;
 import com.fooddeliveryapp.model.User;
 import com.fooddeliveryapp.repository.DeliveryAgentRepository;
 import com.fooddeliveryapp.repository.UserRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryDeliveryAgentRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryUserRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcDeliveryAgentRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcUserRepository;
 import com.fooddeliveryapp.service.impl.UserServiceImpl;
 import com.fooddeliveryapp.type.Role;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,15 +18,15 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class UserServiceTest {
+class UserServiceTest extends JdbcTestBase {
 
     private UserService userService;
     private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
-        userRepository = new InMemoryUserRepository();
-        DeliveryAgentRepository agentRepository = new InMemoryDeliveryAgentRepository(userRepository);
+        userRepository = new JdbcUserRepository(connectionManager);
+        DeliveryAgentRepository agentRepository = new JdbcDeliveryAgentRepository(userRepository);
         userService = new UserServiceImpl(userRepository, agentRepository);
     }
 

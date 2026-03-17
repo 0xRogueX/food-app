@@ -1,12 +1,13 @@
 package com.fooddeliveryapp.service;
 
+import com.fooddeliveryapp.JdbcTestBase;
 import com.fooddeliveryapp.exception.FoodDeliveryException;
 import com.fooddeliveryapp.model.Category;
 import com.fooddeliveryapp.model.MenuItem;
 import com.fooddeliveryapp.repository.CategoryRepository;
 import com.fooddeliveryapp.repository.MenuItemRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryCategoryRepository;
-import com.fooddeliveryapp.repository.inmemory.InMemoryMenuItemRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcCategoryRepository;
+import com.fooddeliveryapp.repository.jdbc.JdbcMenuItemRepository;
 import com.fooddeliveryapp.service.impl.MenuServiceImpl;
 import com.fooddeliveryapp.type.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,14 +18,14 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MenuServiceTest {
+class MenuServiceTest extends JdbcTestBase {
 
     private MenuService menuService;
 
     @BeforeEach
     void setUp() {
-        CategoryRepository categoryRepo = new InMemoryCategoryRepository();
-        MenuItemRepository menuItemRepo = new InMemoryMenuItemRepository(categoryRepo);
+        CategoryRepository categoryRepo = new JdbcCategoryRepository(connectionManager);
+        MenuItemRepository menuItemRepo = new JdbcMenuItemRepository(connectionManager, categoryRepo);
         menuService = new MenuServiceImpl(categoryRepo, menuItemRepo);
     }
 
